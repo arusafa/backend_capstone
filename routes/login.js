@@ -3,13 +3,14 @@ const router = express.Router();
 const Tutor = require("../models/tutor_db");
 
 // Tutor login
-router.post("/login/tutor", async (req, res) => {
+router.post("/login/tutor/email/:email", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.params.email;
+    const password = req.body.password;
 
     // Find tutor by email
     const tutor = await Tutor.findOne({ email: email });
-    if (!tutor) {
+    if (tutor.email !== email) {
       // If email is not found in database
       return res.status(400).json({ message: "Email not found" });
     }

@@ -51,7 +51,7 @@ routes.get("/register/tutor/:id", async (req, res) => {
 routes.get("/register/tutor/email/:email", async (req, res) => {
   try {
     const email = req.params.email;
-    const byDataemail = await registerTutorModel.findOne({ email: email });
+    const byDataemail = await registerTutorModel.findOne({email: email}); // {"email": "email"}
     res.status(200).json(byDataemail);
     console.log("User found by email");
   } catch (error) {
