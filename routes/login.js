@@ -1,30 +1,73 @@
 const express = require("express");
-const router = express.Router();
+const routes = express.Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const cookkieParser = require("cookie-parser");
+const mongoose = require("mongoose");
 const Tutor = require("../models/tutor_db");
 
-// Tutor login
-router.post("/login/tutor/email/:email", async (req, res) => {
-  try {
-    const email = req.params.email;
-    const password = req.body.password;
+/*
+{
+  "email":"test@testemail.com",
+  "password":"test@testemail.com"
+}
+*/
 
-    // Find tutor by email
-    const tutor = await Tutor.findOne({ email: email });
-    if (tutor.email !== email) {
-      // If email is not found in database
-      return res.status(400).json({ message: "Email not found" });
-    }
-    if (tutor.password !== password) {
-      // If password is incorrect
-      return res.status(400).json({ message: "Incorrect password" });
+routes.post("/login/tutor", (req, res) => {
+  const { email, password } = req.body;
+
+  Tutor.findOne({ email }).then((user) => {
+    if (!user) {
+      return res
+        .status(404)
+        .json({ emailoRPasswordNotFound: "Email or Password not found" });
     }
 
-    // Login successful
-    res.status(200).json({ message: "Login successful" });
-  } catch (err) {
-    // Server error
-    res.status(500).json({ message: "Server error" });
-  }
+    bcrypt.compare(password, user.password).then((isMatch) => {
+      if (isMatch) {
+        // User matched
+        // Create JWT Payload
+        const payload = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
+        const keys = process.env.SECRET_KEY || "secret";
+
+        // Sign token
+        jwt.sign(
+          payload,
+          keys,
+          {
+            expiresIn: "1d",
+          },
+          (err, token) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            res.cookie("token", token, {
+              expires: new Date(Date.now() + 86400 * 1000),
+              httpOnly: true,
+            });
+
+            return res.json({
+              success: true,
+              token: "Bearer " + token,
+            });
+          }
+        );
+      } else {
+        return res.status(400).json({ error: "Password incorrect" });
+      }
+    });
+  });
 });
 
-module.exports = router;
+// Logout
+routes.post("/logout/tutor", (req, res) => {
+  res.clearCookie("XSRF-TOKEN");
+  res.json({ message: "Successfully logged out" });
+});
+
+module.exports = routes;
