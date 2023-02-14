@@ -13,10 +13,10 @@ const Tutor = require("../models/tutor_db");
 }
 */
 
-routes.post("/login/tutor", (req, res) => {
+routes.post("/login/tutor/email/:email", (req, res) => {
   const { email, password } = req.body;
 
-  Tutor.findOne({ email }).then((user) => {
+  Tutor.findOne({email:email}).then((user) => {
     if (!user) {
       return res
         .status(404)
