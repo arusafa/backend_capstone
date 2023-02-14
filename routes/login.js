@@ -8,7 +8,7 @@ router.post("/login/tutor", async (req, res) => {
     const { email, password } = req.body;
 
     // Find tutor by email
-    const tutor = await Tutor.findOne({ email });
+    const tutor = await Tutor.findOne({ email: email });
     if (!tutor) {
       // If email is not found in database
       return res.status(400).json({ message: "Email not found" });
